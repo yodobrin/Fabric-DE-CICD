@@ -1,0 +1,28 @@
+[
+  {
+    "name": "t3",
+    "path": "/Tables/dbo",
+    "target": {
+      "type": "OneLake",
+      "oneLake": {
+        "path": "Tables/dbo/t3_dev",
+        "itemId": "77df5d06-8e9b-b559-4aea-86871a3f128d",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "artifactType": "Lakehouse"
+      }
+    }
+  },
+  {
+    "name": "t2",
+    "path": "/Tables/dbo",
+    "target": {
+      "type": "OneLake",
+      "oneLake": {
+        "path": "Tables/dbo/t2",
+        "itemId": "77df5d06-8e9b-b559-4aea-86871a3f128d",
+        "workspaceId": "00000000-0000-0000-0000-000000000000",
+        "artifactType": "Lakehouse"
+      }
+    }
+  }
+]

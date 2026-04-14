@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "MySemanticModel"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "a234e7bf-2327-8a69-47de-c0c89b04e7a0"
+  }
+}
