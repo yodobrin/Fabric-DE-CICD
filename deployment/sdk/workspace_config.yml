@@ -1,0 +1,206 @@
+# ── Fabric workspace configuration ────────────────────────────────────────────
+# This file drives the desired-state engine. All item names, placeholder GUIDs,
+# shortcut definitions, data expectations, and deployment phases are declared
+# here instead of being hardcoded in Python.
+#
+# The same config can be reused across environments by overriding only the
+# `fabric` section (or via CLI flags).
+
+fabric:
+  api_host: api.fabric.microsoft.com        # Override with dailyapi.powerbi.com for daily ring
+  capacity_id: ""                            # Required only when creating a new workspace
+
+# ── Items to deploy ───────────────────────────────────────────────────────────
+# Each item maps a logical key to a Fabric item type and display name.
+# `template_folder` is the subfolder name inside workshop_template/.
+items:
+  lakehouse_bronze:
+    type: Lakehouse
+    display_name: Lakehouse_Bronze
+    enable_schemas: true
+
+  lakehouse_silver:
+    type: Lakehouse
+    display_name: Lakehouse_Silver
+    enable_schemas: true
+
+  environment:
+    type: Environment
+    display_name: MyEnv
+    template_folder: MyEnv.Environment
+
+  nb_bronze_data_preparation:
+    type: Notebook
+    display_name: Bronze_Data_Preparation
+    template_folder: Bronze_Data_Preparation.Notebook
+    default_lakehouse: lakehouse_bronze      # resolved at deploy time
+
+  nb_transformations:
+    type: Notebook
+    display_name: Transformations
+    template_folder: Transformations.Notebook
+    default_lakehouse: lakehouse_silver
+
+  nb_validations:
+    type: Notebook
+    display_name: Validations
+    template_folder: Validations.Notebook
+    default_lakehouse: lakehouse_silver
+
+  copyjob_1:
+    type: CopyJob
+    display_name: MyLHCopyJob
+    template_folder: MyLHCopyJob.CopyJob
+
+  copyjob_2:
+    type: CopyJob
+    display_name: MyLHCopyJob2
+    template_folder: MyLHCopyJob2.CopyJob
+
+  semantic_model:
+    type: SemanticModel
+    display_name: MySemanticModel
+    template_folder: MySemanticModel.SemanticModel
+
+  report:
+    type: Report
+    display_name: MyReport
+    template_folder: MyReport.Report
+
+# ── Placeholder GUIDs in templates ────────────────────────────────────────────
+# These values are found in the workshop_template source files and will be
+# replaced with the real IDs of the target workspace at deploy time.
+placeholders:
+  workspace_id:        "8e0cc78d-1667-4e88-9523-a04c1d5dd187"
+  bronze_lakehouse_id: "3ad63567-2849-4e5b-9cf2-eacd059e50a5"
+  silver_lakehouse_id: "3e67377e-5962-433c-8c2f-d796a8687c2d"
+  silver_sql_conn_str: "X6EPS4XRQ2XUDENLFV6NAEO3I4-RXDQZDTHC2EE5FJDUBGB2XORQ4.msit-datawarehouse.fabric.microsoft.com"
+  silver_sql_conn_id:  "48d64684-b584-4ef5-ad7b-a094b42f52f8"
+  semantic_model_id:   "e4e9593c-b1a9-428e-9581-64939a83c4d9"
+
+# ── Shortcuts ─────────────────────────────────────────────────────────────────
+# Each shortcut is created in the `location` lakehouse and points at a table
+# in the `target` lakehouse. `depends_on` gates creation on a data resource key.
+shortcuts:
+  shortcut_t2:
+    name: t2
+    location_lakehouse: lakehouse_silver
+    path: Tables/dbo
+    target_lakehouse: lakehouse_bronze
+    target_path: Tables/dbo/t2
+    depends_on: data_bronze_t2
+
+  shortcut_t3:
+    name: t3
+    location_lakehouse: lakehouse_silver
+    path: Tables/dbo
+    target_lakehouse: lakehouse_bronze
+    target_path: Tables/dbo/t3_dev
+    depends_on: data_bronze_t3
+
+# ── Data expectations ─────────────────────────────────────────────────────────
+# Tables that should exist after jobs/notebooks run.  Used by the state engine
+# to determine completeness and to gate downstream phases.
+data_expectations:
+  data_bronze_t2:
+    lakehouse: lakehouse_bronze
+    table: t2
+    produced_by: [copyjob_1, copyjob_2]
+
+  data_bronze_t3:
+    lakehouse: lakehouse_bronze
+    table: t3_dev
+    produced_by: [nb_bronze_data_preparation]
+
+  data_silver_t1:
+    lakehouse: lakehouse_silver
+    table: t1
+    produced_by: [nb_transformations]
+
+# ── Deployment phases ─────────────────────────────────────────────────────────
+# Ordered list of phases executed by the deployer.  Each phase lists the item
+# keys (from `items` above) or action keys it handles. This controls execution
+# order and allows running individual phases.
+phases:
+  - name: items
+    description: "Create lakehouses, environment, notebooks, copy jobs"
+    deploy:
+      - lakehouse_bronze
+      - lakehouse_silver
+      - environment
+      - nb_bronze_data_preparation
+      - nb_transformations
+      - nb_validations
+      - copyjob_1
+      - copyjob_2
+
+  - name: copy_jobs
+    description: "Run copy jobs to populate Bronze t2"
+    run_jobs:
+      - copyjob_1
+      - copyjob_2
+    skip_if_done: data_bronze_t2
+
+  - name: shortcuts_and_notebooks
+    description: "Create shortcuts, run Bronze and Transformations notebooks"
+    actions:
+      - shortcut_t2
+      - nb_bronze_data_preparation   # run to produce t3_dev
+      - shortcut_t3
+      - nb_transformations            # run to produce Silver t1
+
+  - name: semantic_layer
+    description: "Deploy semantic model and report"
+    deploy:
+      - semantic_model
+      - report
+
+# ── Verification queries ──────────────────────────────────────────────────────
+# Post-deployment checks. Each query runs against a lakehouse's SQL endpoint.
+# The `expect` block defines pass/fail criteria on the result.
+verifications:
+  bronze_t2_has_data:
+    description: "Copy jobs produced diabetes data in Bronze t2"
+    lakehouse: lakehouse_bronze
+    query: "SELECT COUNT(*) AS cnt FROM dbo.t2"
+    expect:
+      min_rows: 1
+      column_check: { column: cnt, min_value: 400 }
+
+  bronze_t3_dev_has_data:
+    description: "Bronze notebook produced t3_dev sample"
+    lakehouse: lakehouse_bronze
+    query: "SELECT COUNT(*) AS cnt FROM dbo.t3_dev"
+    expect:
+      min_rows: 1
+      column_check: { column: cnt, min_value: 1 }
+
+  bronze_t3_prod_has_data:
+    description: "Copy jobs produced holiday data in Bronze t3_prod"
+    lakehouse: lakehouse_bronze
+    query: "SELECT COUNT(*) AS cnt FROM dbo.t3_prod"
+    expect:
+      min_rows: 1
+      column_check: { column: cnt, min_value: 100 }
+
+  silver_t1_has_data:
+    description: "Transformations notebook produced Silver t1"
+    lakehouse: lakehouse_silver
+    query: "SELECT COUNT(*) AS cnt FROM dbo.t1"
+    expect:
+      min_rows: 1
+      column_check: { column: cnt, min_value: 100 }
+
+  silver_t1_has_join_columns:
+    description: "Silver t1 has columns from both sources (diabetes + holidays)"
+    lakehouse: lakehouse_silver
+    query: "SELECT TOP 1 AGE, BMI, countryOrRegion, holidayName FROM dbo.t1"
+    expect:
+      min_rows: 1
+
+  silver_shortcuts_work:
+    description: "Shortcuts t2 and t3 in Silver resolve correctly"
+    lakehouse: lakehouse_silver
+    query: "SHORTCUT_CHECK: t2, t3"
+    expect:
+      min_rows: 1

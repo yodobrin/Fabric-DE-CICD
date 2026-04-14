@@ -1,0 +1,14 @@
+[project]
+name = "fabric-de-bootstrap"
+version = "0.2.0"
+description = "Config-driven Fabric Data Engineering workspace bootstrap"
+requires-python = ">=3.10"
+dependencies = [
+    "azure-identity>=1.15.0",
+    "requests>=2.31.0",
+    "fabric-cicd>=0.3.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+fabric-bootstrap = "bootstrap:main"
