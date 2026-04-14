@@ -1,6 +1,6 @@
 [
   {
-    "name": "t3",
+    "name": "t3_dev",
     "path": "/Tables/dbo",
     "target": {
       "type": "OneLake",
