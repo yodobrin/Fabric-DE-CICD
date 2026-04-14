@@ -24,6 +24,10 @@
 # META   }
 # META }
 
+# MARKDOWN ********************
+
+# # verify changes are indeed reflected in git
+
 # CELL ********************
 
 # MAGIC %%sql
