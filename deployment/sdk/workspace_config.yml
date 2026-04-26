@@ -117,6 +117,11 @@ data_expectations:
     table: t1
     produced_by: [nb_transformations]
 
+  data_silver_t5:
+    lakehouse: lakehouse_silver
+    table: t5
+    produced_by: [nb_transformations]
+
 # ── Deployment phases ─────────────────────────────────────────────────────────
 # Ordered list of phases executed by the deployer.  Each phase lists the item
 # keys (from `items` above) or action keys it handles. This controls execution
@@ -204,3 +209,11 @@ verifications:
     query: "SHORTCUT_CHECK: t2, t3"
     expect:
       min_rows: 1
+
+  silver_t5_has_data:
+    description: "Transformations notebook produced Silver t5 (analytics)"
+    lakehouse: lakehouse_silver
+    query: "SELECT COUNT(*) AS cnt FROM dbo.t5"
+    expect:
+      min_rows: 1
+      column_check: { column: cnt, min_value: 1 }

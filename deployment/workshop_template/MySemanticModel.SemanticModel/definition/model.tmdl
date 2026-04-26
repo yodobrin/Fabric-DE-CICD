@@ -15,3 +15,5 @@ annotation PBI_ProTooling = ["WebModelingEdit"]
 
 ref table t1
 
+ref table t5
+

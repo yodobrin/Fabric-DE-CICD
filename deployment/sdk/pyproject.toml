@@ -10,5 +10,15 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
 [project.scripts]
 fabric-bootstrap = "bootstrap:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

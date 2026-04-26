@@ -1,0 +1,75 @@
+table t5
+	lineageTag: c7a1d2e3-f4b5-4c6d-8e9f-0a1b2c3d4e5f
+	sourceLineageTag: [dbo].[t5]
+
+	column AGE
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: d8b2e3f4-a5c6-4d7e-9f0a-1b2c3d4e5f6a
+		sourceLineageTag: AGE
+		summarizeBy: none
+		sourceColumn: AGE
+
+		annotation SummarizationSetBy = User
+
+	column SEX
+		dataType: int64
+		formatString: 0
+		sourceProviderType: bigint
+		lineageTag: e9c3f4a5-b6d7-4e8f-0a1b-2c3d4e5f6a7b
+		sourceLineageTag: SEX
+		summarizeBy: none
+		sourceColumn: SEX
+
+		annotation SummarizationSetBy = User
+
+	column BMI
+		dataType: double
+		sourceProviderType: float
+		lineageTag: f0d4a5b6-c7e8-4f9a-1b2c-3d4e5f6a7b8c
+		sourceLineageTag: BMI
+		summarizeBy: none
+		sourceColumn: BMI
+
+		annotation SummarizationSetBy = User
+
+	column countryOrRegion
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: a1e5b6c7-d8f9-4a0b-2c3d-4e5f6a7b8c9d
+		sourceLineageTag: countryOrRegion
+		summarizeBy: none
+		sourceColumn: countryOrRegion
+
+		annotation SummarizationSetBy = User
+
+	column holidayName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: b2f6c7d8-e9a0-4b1c-3d4e-5f6a7b8c9d0e
+		sourceLineageTag: holidayName
+		summarizeBy: none
+		sourceColumn: holidayName
+
+		annotation SummarizationSetBy = User
+
+	column created_timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceProviderType: timestamp
+		lineageTag: c3a7d8e9-f0b1-4c2d-4e5f-6a7b8c9d0e1f
+		sourceLineageTag: created_timestamp
+		summarizeBy: none
+		sourceColumn: created_timestamp
+
+		annotation SummarizationSetBy = User
+
+	partition t5 = entity
+		mode: directLake
+		source
+			entityName: t5
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	annotation PBI_ResultType = Table
